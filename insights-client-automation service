@@ -1,0 +1,9 @@
+[Unit]
+Description=Insights Client Automation when /etc/insights-client/.lastupload has changed
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/assign-group.sh
+
+[Install]
+WantedBy=insights-client.timer
