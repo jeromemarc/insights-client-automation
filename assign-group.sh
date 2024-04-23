@@ -4,12 +4,14 @@
 
 TAG_FILE=/etc/insights-client/tags.yaml
 CREDS_FILE=/etc/insights-client/creds
-
+MACHINE_ID=`cat /etc/insights-client/machine-id`
 GROUP_NAME=`sed -n -e 's/^group: //p' $TAG_FILE | tail -n 1 | jq -Rr '@uri'`
-SYSTEM_ID=`sudo insights-client --diagnosis | jq -r '.id'`
 
 # Generate token for console.redhat.com
 TOKEN=`curl -s -d @"$CREDS_FILE" -d "grant_type=client_credentials" "https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token" -d "scope=api.console" | jq -r '.access_token'`
+
+# Get system id from machineid
+SYSTEM_ID=`curl -s -X 'GET' "https://console.redhat.com/api/inventory/v1/hosts?insights_id=$MACHINE_ID" -H 'accept: application/json' -H "Authorization: Bearer $TOKEN" | jq -r '.results[] | .id'`
 
 # Remove system from existing group
 curl -s -X 'DELETE' "https://console.redhat.com/api/inventory/v1/groups/hosts/$SYSTEM_ID" -H 'accept: */*' -H "Authorization: Bearer $TOKEN"
